@@ -4,14 +4,15 @@ plugins {
     id("com.google.devtools.ksp")
     id("kotlin-kapt")
     id("com.google.dagger.hilt.android")
+    id("com.google.gms.google-services")
 }
 
 android {
-    namespace = "com.example.btlandroidtinder"
+    namespace = "com.btl.tinder"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.example.btlandroidtinder"
+        applicationId = "com.btl.tinder"
         minSdk = 24
         targetSdk = 36
         versionCode = 1
@@ -51,4 +52,14 @@ dependencies {
 
     implementation(libs.dagger.hilt.android)
     kapt(libs.dagger.hilt.android.compiler)
+
+    implementation(libs.accompanist.systemuicontroller)
+
+    implementation(libs.coil.compose)
+    implementation(libs.coil.network.okhttp)
+
+    implementation(libs.kotlinx.coroutines.android)
+
+    implementation(libs.firebase.bom)
+    implementation(libs.firebase.analytics)
 }

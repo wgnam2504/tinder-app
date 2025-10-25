@@ -1,4 +1,4 @@
-package com.example.btlandroidtinder
+package com.btl.tinder
 
 import android.os.Bundle
 import androidx.activity.enableEdgeToEdge
