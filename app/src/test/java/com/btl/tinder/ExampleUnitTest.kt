@@ -1,4 +1,4 @@
-package com.example.btlandroidtinder
+package com.btl.tinder
 
 import org.junit.Test
 
