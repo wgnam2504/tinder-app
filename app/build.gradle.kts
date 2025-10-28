@@ -53,8 +53,6 @@ dependencies {
     implementation(composeBom)
     androidTestImplementation(composeBom)
 
-
-
     // --- Jetpack Compose ---
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.material3)
@@ -95,5 +93,8 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
+
+    // --- exyte AndroidAnimatedNavigationBar ---
+    implementation(libs.animated.navigation.bar)
 
 }
