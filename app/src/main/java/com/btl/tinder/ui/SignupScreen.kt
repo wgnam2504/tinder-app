@@ -107,7 +107,7 @@ fun SignupScreen(navController: NavController, vm: TCViewModel) {
             val focus = LocalFocusManager.current
 
             Image(
-                painter = painterResource(R.drawable.logo_sub_1),
+                painter = painterResource(R.drawable.logo_sub_1_fixed),
                 contentDescription = null,
                 modifier = Modifier
                     .width(200.dp)
