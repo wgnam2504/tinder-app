@@ -17,6 +17,7 @@ import com.btl.tinder.ui.SignupScreen
 import com.btl.tinder.ui.SingleChatScreen
 import com.btl.tinder.ui.SwipeCards
 import com.btl.tinder.ui.theme.TinderCloneTheme
+import dagger.hilt.android.AndroidEntryPoint
 
 sealed class DestinationScreen(val route: String) {
     object Signup : DestinationScreen("signup")
@@ -29,6 +30,7 @@ sealed class DestinationScreen(val route: String) {
     }
 }
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

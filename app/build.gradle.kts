@@ -47,9 +47,7 @@ android {
 }
 
 dependencies {
-
-    implementation(libs.androidx.navigation.compose)
-    implementation(libs.foundation)
+    implementation(libs.firebase.auth)
     // --- Compose BOM ---
     val composeBom = platform("androidx.compose:compose-bom:2025.10.00")
     implementation(composeBom)
@@ -98,5 +96,11 @@ dependencies {
 
     // --- exyte AndroidAnimatedNavigationBar ---
     implementation(libs.animated.navigation.bar)
+
+    implementation(libs.androidx.navigation.compose)
+    implementation(libs.foundation)
+    implementation(libs.firebase.firestore)
+    implementation(libs.firebase.storage)
+    implementation(libs.firebase.auth.ktx)
 
 }
