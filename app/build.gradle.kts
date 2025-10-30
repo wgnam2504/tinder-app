@@ -47,7 +47,7 @@ android {
 }
 
 dependencies {
-    implementation(libs.firebase.auth)
+
     // --- Compose BOM ---
     val composeBom = platform("androidx.compose:compose-bom:2025.10.00")
     implementation(composeBom)
@@ -74,10 +74,12 @@ dependencies {
     // --- Dependency Injection (Hilt) ---
     implementation(libs.dagger.hilt.android)
     kapt(libs.dagger.hilt.android.compiler)
+    implementation(libs.androidx.hilt.navigation.compose)
 
     // --- Firebase ---
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.analytics)
+    implementation(libs.firebase.auth)
 
     // --- Accompanist ---
     implementation(libs.accompanist.systemuicontroller)
