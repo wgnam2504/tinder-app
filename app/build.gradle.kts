@@ -53,8 +53,6 @@ dependencies {
     implementation(composeBom)
     androidTestImplementation(composeBom)
 
-
-
     // --- Jetpack Compose ---
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.material3)
@@ -76,10 +74,12 @@ dependencies {
     // --- Dependency Injection (Hilt) ---
     implementation(libs.dagger.hilt.android)
     kapt(libs.dagger.hilt.android.compiler)
+    implementation(libs.androidx.hilt.navigation.compose)
 
     // --- Firebase ---
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.analytics)
+    implementation(libs.firebase.auth)
 
     // --- Accompanist ---
     implementation(libs.accompanist.systemuicontroller)
@@ -95,5 +95,14 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
+
+    // --- exyte AndroidAnimatedNavigationBar ---
+    implementation(libs.animated.navigation.bar)
+
+    implementation(libs.androidx.navigation.compose)
+    implementation(libs.foundation)
+    implementation(libs.firebase.firestore)
+    implementation(libs.firebase.storage)
+    implementation(libs.firebase.auth.ktx)
 
 }
