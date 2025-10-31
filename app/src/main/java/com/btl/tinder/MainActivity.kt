@@ -2,6 +2,7 @@ package com.btl.tinder
 
 import android.annotation.SuppressLint
 import android.app.Activity
+import android.graphics.Typeface
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -12,6 +13,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.core.content.res.ResourcesCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.compose.NavHost
@@ -85,25 +87,6 @@ fun SwipeAppNavigation() {
     }
 }
 
-@SuppressLint("ContextCastToActivity")
-@Composable
-fun NotificationMessage(vm: TCViewModel) {
-    val notifState = vm.popupNotification.value
-    val activity = LocalContext.current as? Activity
 
-    LaunchedEffect(notifState) {
-        notifState?.getContentOrNull()?.let { notifMessage ->
-            activity?.let {
-                MotionToast.darkToast(
-                    it,
-                    "Lỗi ☹️",
-                    notifMessage,
-                    MotionToastStyle.ERROR,
-                    MotionToast.GRAVITY_BOTTOM,
-                    MotionToast.LONG_DURATION,
-                    ResourcesCompat.getFont(activity, R.font.delius_regular)
-                )
-            }
-        }
-    }
-}
+
+

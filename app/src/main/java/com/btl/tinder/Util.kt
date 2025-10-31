@@ -1,5 +1,8 @@
 package com.btl.tinder
 
+import android.annotation.SuppressLint
+import android.app.Activity
+import android.graphics.Typeface
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -7,11 +10,16 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.core.content.res.ResourcesCompat
 import androidx.navigation.NavController
+import www.sanju.motiontoast.MotionToast
+import www.sanju.motiontoast.MotionToastStyle
 
 /**
  * Điều hướng đến một màn hình cụ thể trong ứng dụng thông qua [NavController].
@@ -43,5 +51,33 @@ fun CommonProgressSpinner() {
         verticalAlignment = Alignment.CenterVertically
     ) {
         CircularProgressIndicator()
+    }
+}
+
+@SuppressLint("ContextCastToActivity")
+@Composable
+fun NotificationMessage(vm: TCViewModel) {
+    val notifState = vm.popupNotification.value
+    val activity = LocalContext.current as? Activity
+
+    val boldTypeface = Typeface.create(
+        ResourcesCompat.getFont(LocalContext.current, R.font.delius_regular),
+        Typeface.BOLD
+    )
+
+    LaunchedEffect(notifState) {
+        notifState?.getContentOrNull()?.let { notifMessage ->
+            activity?.let {
+                MotionToast.darkToast(
+                    it,
+                    "Error ☹️",
+                    notifMessage,
+                    MotionToastStyle.ERROR,
+                    MotionToast.GRAVITY_BOTTOM,
+                    MotionToast.LONG_DURATION,
+                    boldTypeface
+                )
+            }
+        }
     }
 }
