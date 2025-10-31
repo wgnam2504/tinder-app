@@ -1,6 +1,7 @@
 package com.btl.tinder
 
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -8,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.core.view.WindowCompat.enableEdgeToEdge
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -56,6 +58,8 @@ fun SwipeAppNavigation() {
     val navController = rememberNavController()
     val vm = hiltViewModel<TCViewModel>()
 
+    NotificationMessage(vm = vm)
+
     NavHost(navController = navController, startDestination = DestinationScreen.Signup.route) {
         composable(DestinationScreen.Signup.route) {
             SignupScreen(navController, vm)
@@ -75,5 +79,14 @@ fun SwipeAppNavigation() {
         composable(DestinationScreen.SingleChat.route) {
             SingleChatScreen(chatId = "123")
         }
+    }
+}
+
+@Composable
+fun NotificationMessage(vm: TCViewModel) {
+    val notifState = vm.popupNotification.value
+    val notifMessage = notifState?.getContentOrNull()
+    if (!notifMessage.isNullOrEmpty()) {
+        Toast.makeText(LocalContext.current, notifMessage, Toast.LENGTH_LONG).show()
     }
 }

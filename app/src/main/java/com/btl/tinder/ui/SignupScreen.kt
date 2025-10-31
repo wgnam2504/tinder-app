@@ -111,7 +111,7 @@ fun SignupScreen(navController: NavController, vm: TCViewModel) {
                 contentDescription = null,
                 modifier = Modifier
                     .width(200.dp)
-                    .padding(top = 60.dp)
+                    .padding(top = 40.dp)
                     .padding(8.dp)
             )
             Text(
