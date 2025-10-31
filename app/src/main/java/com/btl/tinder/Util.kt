@@ -68,7 +68,7 @@ fun NotificationMessage(vm: TCViewModel) {
     LaunchedEffect(notifState) {
         notifState?.getContentOrNull()?.let { notifMessage ->
             activity?.let {
-                MotionToast.darkToast(
+                MotionToast.createToast(
                     it,
                     "Error ☹️",
                     notifMessage,
@@ -79,5 +79,6 @@ fun NotificationMessage(vm: TCViewModel) {
                 )
             }
         }
+
     }
 }
