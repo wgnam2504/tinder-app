@@ -105,4 +105,6 @@ dependencies {
     implementation(libs.firebase.storage)
     implementation(libs.firebase.auth.ktx)
 
+    implementation(libs.motiontoast)
+
 }

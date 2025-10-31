@@ -20,6 +20,7 @@ constraintlayout = "2.2.1"
 hiltAndroid="2.57.2"
 material3 = "1.4.0"
 materialIconsExtended = "1.7.8"
+motiontoast = "1.4"
 navigationCompose = "2.9.5"
 foundation = "1.9.4"
 firebaseFirestore = "26.0.2"
@@ -62,6 +63,7 @@ firebase-firestore = { group = "com.google.firebase", name = "firebase-firestore
 firebase-storage = { group = "com.google.firebase", name = "firebase-storage", version.ref = "firebaseStorage" }
 firebase-auth-ktx = { group = "com.google.firebase", name = "firebase-auth-ktx", version.ref = "firebaseAuthKtx" }
 firebase-auth = { group = "com.google.firebase", name = "firebase-auth", version.ref = "firebaseAuth" }
+motiontoast = { module = "com.github.Spikeysanju:MotionToast", version.ref = "motiontoast" }
 
 
 [plugins]
