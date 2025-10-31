@@ -184,7 +184,14 @@ fun SignupScreen(navController: NavController, vm: TCViewModel) {
             Spacer(modifier = Modifier.height(20.dp))
 
             Button(
-                onClick = { /* TODO: Sign Up */ },
+                onClick = {
+                    focus.clearFocus(force = true)
+                    vm.onSignup(
+                        usernameState.value.text,
+                        emailState.value.text,
+                        passwordState.value.text
+                    )
+                },
                 modifier = Modifier
                     .fillMaxWidth(0.6f)
                     .height(50.dp),
