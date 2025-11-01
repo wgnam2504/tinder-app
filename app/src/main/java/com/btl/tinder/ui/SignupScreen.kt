@@ -17,10 +17,16 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -42,7 +48,10 @@ import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -112,6 +121,7 @@ fun SignupScreen(navController: NavController, vm: TCViewModel) {
             val usernameState = remember { mutableStateOf(TextFieldValue()) }
             val emailState = remember { mutableStateOf(TextFieldValue()) }
             val passwordState = remember { mutableStateOf(TextFieldValue()) }
+            val passwordVisible = remember { mutableStateOf(false) }
 
             val focus = LocalFocusManager.current
 
@@ -164,6 +174,7 @@ fun SignupScreen(navController: NavController, vm: TCViewModel) {
                 label = { Text(text = "Email", fontFamily = deliusFontFamily, color = Color.Black) }
             )
 
+
             OutlinedTextField(
                 value = passwordState.value,
                 onValueChange = { passwordState.value = it },
@@ -178,17 +189,21 @@ fun SignupScreen(navController: NavController, vm: TCViewModel) {
                     focusedTextColor = Color.Black,
                     unfocusedTextColor = Color.Black
                 ),
-                label = { Text(text = "Password", fontFamily = deliusFontFamily, color = Color.Black) }
-            )
+                label = { Text(text = "Password", fontFamily = deliusFontFamily, color = Color.Black) },
+                visualTransformation = if (passwordVisible.value) VisualTransformation.None else PasswordVisualTransformation(),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                trailingIcon = {
+                    val image = if (passwordVisible.value)
+                        Icons.Filled.Visibility
+                    else Icons.Filled.VisibilityOff
 
-//            Button(
-//                onClick = {
-//                    focus.clearFocus(force = true)
-//                          // call ViewModel onSignup
-//                },
-//                modifier = Modifier.padding(8.dp)) {
-//                Text(text = "Sign Up", fontFamily = deliusFontFamily, fontWeight = FontWeight.W600)
-//            }
+                    val description = if (passwordVisible.value) "Hide password" else "Show password"
+
+                    IconButton(onClick = { passwordVisible.value = !passwordVisible.value }) {
+                        Icon(imageVector = image, description, tint = Color.Black) // Changed icon color to black
+                    }
+                }
+            )
 
             Spacer(modifier = Modifier.height(20.dp))
 
@@ -198,7 +213,8 @@ fun SignupScreen(navController: NavController, vm: TCViewModel) {
                     vm.onSignup(
                         usernameState.value.text,
                         emailState.value.text,
-                        passwordState.value.text
+                        passwordState.value.text,
+                        navController
                     )
                 },
                 modifier = Modifier
