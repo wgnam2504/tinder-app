@@ -27,6 +27,7 @@ firebaseFirestore = "26.0.2"
 firebaseStorage = "22.0.1"
 firebaseAuthKtx = "23.2.1"
 firebaseAuth = "24.0.1"
+toasty = "1.5.2"
 
 
 [libraries]
@@ -64,6 +65,7 @@ firebase-storage = { group = "com.google.firebase", name = "firebase-storage", v
 firebase-auth-ktx = { group = "com.google.firebase", name = "firebase-auth-ktx", version.ref = "firebaseAuthKtx" }
 firebase-auth = { group = "com.google.firebase", name = "firebase-auth", version.ref = "firebaseAuth" }
 motiontoast = { module = "com.github.Spikeysanju:MotionToast", version.ref = "motiontoast" }
+toasty = { module = "com.github.GrenderG:Toasty", version.ref = "toasty" }
 
 
 [plugins]

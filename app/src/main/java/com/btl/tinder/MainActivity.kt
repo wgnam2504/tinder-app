@@ -27,8 +27,6 @@ import com.btl.tinder.ui.SingleChatScreen
 import com.btl.tinder.ui.SwipeCards
 import com.btl.tinder.ui.theme.TinderCloneTheme
 import dagger.hilt.android.AndroidEntryPoint
-import www.sanju.motiontoast.MotionToast
-import www.sanju.motiontoast.MotionToastStyle
 
 sealed class DestinationScreen(val route: String) {
     object Signup : DestinationScreen("signup")
