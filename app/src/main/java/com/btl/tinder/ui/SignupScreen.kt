@@ -47,6 +47,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.btl.tinder.CheckSignedIn
 import com.btl.tinder.CommonProgressSpinner
 import com.btl.tinder.DestinationScreen
 import com.btl.tinder.R
@@ -62,9 +63,15 @@ val deliusFontFamily = FontFamily(
     Font(R.font.delius_regular, FontWeight.Normal)
 )
 
+val deliusBold1FontFamily = FontFamily(
+    Font(R.font.delius_regular, FontWeight.Bold)
+)
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SignupScreen(navController: NavController, vm: TCViewModel) {
+
+    CheckSignedIn(vm = vm, navController = navController)
 
     val systemUiController = rememberSystemUiController()
 
@@ -227,6 +234,8 @@ fun SignupScreen(navController: NavController, vm: TCViewModel) {
             Text(
                 text = "Already a user? Go to login",
                 color = Color.Black,
+                fontFamily = deliusFontFamily,
+                fontWeight = FontWeight.W700,
                 modifier = Modifier
                     .padding(8.dp)
                     .clickable {
