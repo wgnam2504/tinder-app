@@ -5,6 +5,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import com.btl.tinder.data.COLLECTION_USER
 import com.btl.tinder.data.Event
+import com.btl.tinder.data.UserData
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
@@ -33,12 +34,10 @@ class TCViewModel @Inject constructor(
                 if (it.isEmpty) {
                     auth.createUserWithEmailAndPassword(email, pass)
                         .addOnCompleteListener {task ->
-                            if (task.isSuccessful) {
-                                // Create user profile in database
-                            }
-                            else {
+                            if (task.isSuccessful)
+                                createOrUpdateProfile(username = username)
+                            else
                                 handleException(task.exception, "Signup failed")
-                            }
                         }
                 }
                 else {
@@ -49,6 +48,47 @@ class TCViewModel @Inject constructor(
             .addOnFailureListener {
                 handleException(it)
             }
+    }
+
+    private fun createOrUpdateProfile(
+        name: String? = null,
+        username: String? = null,
+        bio: String? = null,
+        imageUrl: String? = null
+    ) {
+        val uid = auth.currentUser?.uid
+        val userData = UserData(
+            userId = uid,
+            name = name,
+            username = username,
+            imageUrl = imageUrl,
+            bio = bio
+        )
+
+        uid?.let {
+            inProgress.value = true
+            db.collection(COLLECTION_USER).document(uid)
+                .get()
+                .addOnSuccessListener {
+                    if (it.exists()) //Update
+                        it.reference.update(userData.toMap())
+                            .addOnSuccessListener {
+                                inProgress.value = false
+                                popupNotification.value = Event("Profile updated")
+                            }
+                            .addOnFailureListener { it ->
+                                handleException(it, "Cannot update user")
+                                inProgress.value = false
+                            }
+                    else { //Create new
+                        db.collection(COLLECTION_USER).document(uid).set(userData)
+                    }
+                }
+                .addOnFailureListener {
+                    handleException(it, "Cannot create user")
+                    inProgress.value = false
+                }
+        }
     }
 
     private fun handleException(exception: Exception? = null, customMessage: String = "") {
