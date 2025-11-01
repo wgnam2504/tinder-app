@@ -2,6 +2,7 @@ package com.btl.tinder.ui
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -33,6 +34,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
@@ -45,6 +47,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.btl.tinder.CheckSignedIn
 import com.btl.tinder.CommonProgressSpinner
 import com.btl.tinder.DestinationScreen
 import com.btl.tinder.R
@@ -60,9 +63,15 @@ val deliusFontFamily = FontFamily(
     Font(R.font.delius_regular, FontWeight.Normal)
 )
 
+val deliusBold1FontFamily = FontFamily(
+    Font(R.font.delius_regular, FontWeight.Bold)
+)
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SignupScreen(navController: NavController, vm: TCViewModel) {
+
+    CheckSignedIn(vm = vm, navController = navController)
 
     val systemUiController = rememberSystemUiController()
 
@@ -110,14 +119,14 @@ fun SignupScreen(navController: NavController, vm: TCViewModel) {
                 painter = painterResource(R.drawable.logo_sub_1_fixed),
                 contentDescription = null,
                 modifier = Modifier
-                    .width(200.dp)
+                    .fillMaxWidth(0.7f)
                     .padding(top = 40.dp)
-                    .padding(8.dp)
+                    .padding(start = 8.dp, end = 8.dp, bottom = 0.dp)
             )
             Text(
                 text = "Sign Up",
                 modifier = Modifier
-                    .padding(8.dp),
+                    .padding(start = 8.dp, end = 8.dp, bottom = 8.dp),
                 fontSize = 50.sp,
                 fontFamily = pacificoFontFamily
             )
@@ -225,6 +234,8 @@ fun SignupScreen(navController: NavController, vm: TCViewModel) {
             Text(
                 text = "Already a user? Go to login",
                 color = Color.Black,
+                fontFamily = deliusFontFamily,
+                fontWeight = FontWeight.W700,
                 modifier = Modifier
                     .padding(8.dp)
                     .clickable {

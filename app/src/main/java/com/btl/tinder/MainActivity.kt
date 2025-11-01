@@ -1,16 +1,21 @@
 package com.btl.tinder
 
+import android.annotation.SuppressLint
+import android.app.Activity
+import android.graphics.Typeface
 import android.os.Bundle
-import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.*
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.core.view.WindowCompat.enableEdgeToEdge
+import androidx.compose.ui.text.font.FontWeight
+import androidx.core.content.res.ResourcesCompat
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -22,7 +27,6 @@ import com.btl.tinder.ui.SingleChatScreen
 import com.btl.tinder.ui.SwipeCards
 import com.btl.tinder.ui.theme.TinderCloneTheme
 import dagger.hilt.android.AndroidEntryPoint
-import androidx.hilt.navigation.compose.hiltViewModel
 
 sealed class DestinationScreen(val route: String) {
     object Signup : DestinationScreen("signup")
@@ -39,7 +43,6 @@ sealed class DestinationScreen(val route: String) {
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-//        enableEdgeToEdge()
         setContent {
             TinderCloneTheme {
                 Surface(
@@ -65,7 +68,7 @@ fun SwipeAppNavigation() {
             SignupScreen(navController, vm)
         }
         composable(DestinationScreen.Login.route) {
-            LoginScreen()
+            LoginScreen(navController, vm)
         }
         composable(DestinationScreen.Profile.route) {
             ProfileScreen(navController)
@@ -82,11 +85,6 @@ fun SwipeAppNavigation() {
     }
 }
 
-@Composable
-fun NotificationMessage(vm: TCViewModel) {
-    val notifState = vm.popupNotification.value
-    val notifMessage = notifState?.getContentOrNull()
-    if (!notifMessage.isNullOrEmpty()) {
-        Toast.makeText(LocalContext.current, notifMessage, Toast.LENGTH_LONG).show()
-    }
-}
+
+
+
