@@ -59,7 +59,7 @@ fun CommonProgressSpinner() {
 fun NotificationMessage(vm: TCViewModel) {
     val notifState = vm.popupNotification.value
     val notifMessage = notifState?.getContentOrNull()
-    val icon = ContextCompat.getDrawable(LocalContext.current, R.drawable.logo_sub_1_fixed)
+    val icon = ContextCompat.getDrawable(LocalContext.current, R.drawable.logo_main)
     if (!notifMessage.isNullOrEmpty()) {
         Toasty.normal(LocalContext.current, notifMessage, Toasty.LENGTH_LONG, icon).show()
     }
