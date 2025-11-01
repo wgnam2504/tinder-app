@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import com.btl.tinder.data.COLLECTION_USER
 import com.btl.tinder.data.Event
 import com.btl.tinder.data.UserData
+import com.btl.tinder.ui.Gender
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
@@ -87,7 +88,9 @@ class TCViewModel @Inject constructor(
         name: String? = null,
         username: String? = null,
         bio: String? = null,
-        imageUrl: String? = null
+        imageUrl: String? = null,
+        gender: Gender? = null,
+        genderPreference: Gender? = null
     ) {
         val uid = auth.currentUser?.uid
         val userData = UserData(
@@ -95,7 +98,9 @@ class TCViewModel @Inject constructor(
             name = name ?: userData.value?.name,
             username = username ?: userData.value?.username,
             imageUrl = imageUrl ?: userData.value?.imageUrl,
-            bio = bio ?: userData.value?.bio
+            bio = bio ?: userData.value?.bio,
+            gender = gender?.toString() ?: userData.value?.gender,
+            genderPreference = genderPreference?.toString() ?: userData.value?.genderPreference
         )
 
         uid?.let {
@@ -138,7 +143,6 @@ class TCViewModel @Inject constructor(
                     this.userData.value = user
                     inProgress.value = false
                 }
-
             }
     }
 
@@ -157,4 +161,5 @@ class TCViewModel @Inject constructor(
         popupNotification.value = Event(message)
         inProgress.value = false
     }
+    
 }

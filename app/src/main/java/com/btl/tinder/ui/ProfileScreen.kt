@@ -14,6 +14,10 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 
+enum class Gender {
+    MALE, FEMALE, ANY
+}
+
 @Composable
 fun ProfileScreen(navController: NavController) {
     Column(

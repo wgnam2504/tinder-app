@@ -7,13 +7,17 @@ data class UserData(
     var name: String? = "",
     var username: String? = "",
     var imageUrl: String? = "",
-    var bio: String? = ""
+    var bio: String? = "",
+    var gender: String? = "",
+    var genderPreference: String? = ""
 ) {
     fun toMap() = mapOf(
         "userId" to userId,
         "name" to name,
         "username" to username,
         "imageUrl" to imageUrl,
-        "bio" to bio
+        "bio" to bio,
+        "gender" to gender,
+        "genderPreference" to genderPreference
     )
 }
