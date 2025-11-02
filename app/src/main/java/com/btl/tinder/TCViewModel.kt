@@ -4,11 +4,15 @@ import android.util.Log
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.navigation.NavController
+import com.btl.tinder.data.COLLECTION_CHAT
 import com.btl.tinder.data.COLLECTION_USER
+import com.btl.tinder.data.ChatData
+import com.btl.tinder.data.ChatUser
 import com.btl.tinder.data.Event
 import com.btl.tinder.data.UserData
 import com.btl.tinder.ui.Gender
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.toObject
 import com.google.firebase.storage.FirebaseStorage
@@ -242,8 +246,8 @@ class TCViewModel @Inject constructor(
                             var showUser = true
                             Log.d("TCViewModel", "Processing potential user: ${potential.userId}, Name: ${potential.name}")
                             if (
-                                userData.value?.swipeLeft?.contains(potential.userId) == true ||
-                                userData.value?.swipeRight?.contains(potential.userId) == true ||
+                                userData.value?.swipesLeft?.contains(potential.userId) == true ||
+                                userData.value?.swipesRight?.contains(potential.userId) == true ||
                                 userData.value?.matches?.contains(potential.userId) == true
                             ) {
                                 showUser = false
@@ -260,5 +264,48 @@ class TCViewModel @Inject constructor(
                 }
             }
     }
+
+    fun onDislike(selectedUser: UserData) {
+        db.collection(COLLECTION_USER).document(userData.value?.userId ?: "")
+            .update("swipesLeft", FieldValue.arrayUnion(selectedUser.userId))
+    }
+
+    fun onLike(selectedUser: UserData) {
+        // Gốc ko có non-null
+        val reciprocalMatch = selectedUser.swipesRight?.contains(userData.value?.userId)
+        if (!reciprocalMatch!!) {
+            db.collection(COLLECTION_USER).document(userData.value?.userId ?: "")
+                .update("swipesRight", FieldValue.arrayUnion(selectedUser.userId))
+        } else {
+            popupNotification.value = Event("Match!")
+
+            db.collection(COLLECTION_USER).document(selectedUser.userId ?: "")
+                .update("swipesRight", FieldValue.arrayRemove(userData.value?.userId))
+            db.collection(COLLECTION_USER).document(selectedUser.userId ?: "")
+                .update("matches", FieldValue.arrayUnion(userData.value?.userId))
+            db.collection(COLLECTION_USER).document(userData.value?.userId ?: "")
+                .update("matches", FieldValue.arrayUnion(selectedUser.userId))
+
+            val chatKey = db.collection(COLLECTION_CHAT).document().id
+            val chatData = ChatData(
+                chatKey,
+                ChatUser(
+                    userData.value?.userId,
+                    if (userData.value?.name.isNullOrEmpty()) userData.value?.username
+                    else userData.value?.name,
+                    userData.value?.imageUrl
+                ),
+                ChatUser(
+                    selectedUser.userId,
+                    if (selectedUser.name.isNullOrEmpty()) selectedUser.username
+                    else selectedUser.name,
+                    selectedUser.imageUrl
+                )
+            )
+            db.collection(COLLECTION_CHAT).document(chatKey).set(chatData)
+        }
+    }
+
+
 
 }

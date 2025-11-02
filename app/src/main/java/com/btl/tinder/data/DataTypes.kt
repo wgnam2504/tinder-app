@@ -10,8 +10,8 @@ data class UserData(
     var bio: String? = "",
     var gender: String? = "",
     var genderPreference: String? = "",
-    var swipeLeft: List<String>? = listOf(),
-    var swipeRight: List<String>? = listOf(),
+    var swipesLeft: List<String>? = listOf(),
+    var swipesRight: List<String>? = listOf(),
     var matches: List<String>? = listOf()
 ) {
     fun toMap() = mapOf(
@@ -22,8 +22,20 @@ data class UserData(
         "bio" to bio,
         "gender" to gender,
         "genderPreference" to genderPreference,
-        "swipeLeft" to swipeLeft,
-        "swipeRight" to swipeRight,
+        "swipesLeft" to swipesLeft,
+        "swipesRight" to swipesRight,
         "matches" to matches
     )
 }
+
+data class ChatData(
+    var chatId: String? = "",
+    var user1: ChatUser = ChatUser(),
+    var user2: ChatUser = ChatUser()
+)
+
+data class ChatUser(
+    var userId: String? = "",
+    var name: String? = "",
+    var imageUrl: String? = ""
+)

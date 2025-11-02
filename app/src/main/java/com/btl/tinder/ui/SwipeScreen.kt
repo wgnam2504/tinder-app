@@ -102,9 +102,9 @@ fun SwipeScreen(navController: NavController, vm: TCViewModel) {
                             if (state.swipedDirection == Direction.Left ||
                                 state.swipedDirection == Direction.Down
                             ) {
-                                //vm.onDislike(matchProfile)
+                                vm.onDislike(matchProfile)
                             } else {
-                                //vm.onLike(matchProfile)
+                                vm.onLike(matchProfile)
                             }
                         }
                     }
