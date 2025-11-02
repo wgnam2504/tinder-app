@@ -144,12 +144,14 @@ class TCViewModel @Inject constructor(
         db.collection(COLLECTION_USER).document(uid)
             .addSnapshotListener { value, error ->
                 if (error != null) {
+                    Log.e("TCViewModel", "Error getting user data: ${error.message}")
                     handleException(error, "Cannot get user data")
                 }
                 if (value != null) {
                     val user = value.toObject(UserData::class.java)
                     userData.value = user
                     inProgress.value = false
+                    Log.d("TCViewModel", "User data loaded: ${userData.value}")
                     populateCards()
                 }
             }
@@ -194,16 +196,18 @@ class TCViewModel @Inject constructor(
                 )
             )
         )
-
     }
 
     private fun populateCards() {
         inProgressProfiles.value = true
+        Log.d("TCViewModel", "populateCards called. Current User Data: ${userData.value}")
 
         val g = if (userData.value?.gender.isNullOrEmpty()) "ANY"
         else userData.value!!.gender!!.uppercase()
         val gPref = if (userData.value?.genderPreference.isNullOrEmpty()) "ANY"
         else userData.value!!.genderPreference!!.uppercase()
+
+        Log.d("TCViewModel", "User Gender: $g, Preference: $gPref")
 
         val cardsQuery =
             when (Gender.valueOf(gPref)) {
@@ -227,24 +231,30 @@ class TCViewModel @Inject constructor(
             .addSnapshotListener { value, error ->
                 if (error != null) {
                     inProgressProfiles.value = false
+                    Log.e("TCViewModel", "Error fetching cards: ${error.message}", error)
                     handleException(error)
                 }
                 if (value != null) {
+                    Log.d("TCViewModel", "Fetched ${value.documents.size} documents from Firestore.")
                     val potentials = mutableListOf<UserData>()
                     value.documents.forEach {
                         it.toObject<UserData>()?.let {potential ->
                             var showUser = true
+                            Log.d("TCViewModel", "Processing potential user: ${potential.userId}, Name: ${potential.name}")
                             if (
                                 userData.value?.swipeLeft?.contains(potential.userId) == true ||
                                 userData.value?.swipeRight?.contains(potential.userId) == true ||
                                 userData.value?.matches?.contains(potential.userId) == true
-                            )
+                            ) {
                                 showUser = false
+                                Log.d("TCViewModel", "User ${potential.userId} already swiped/matched. Not showing.")
+                            }
                             if (showUser)
                                 potentials.add(potential)
                         }
                     }
 
+                    Log.d("TCViewModel", "Found ${potentials.size} potential matches after filtering.")
                     matchProfiles.value = potentials
                     inProgressProfiles.value = false
                 }

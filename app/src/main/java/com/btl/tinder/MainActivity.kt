@@ -24,7 +24,7 @@ import com.btl.tinder.ui.LoginScreen
 import com.btl.tinder.ui.ProfileScreen
 import com.btl.tinder.ui.SignupScreen
 import com.btl.tinder.ui.SingleChatScreen
-import com.btl.tinder.ui.SwipeCards
+import com.btl.tinder.ui.SwipeScreen
 import com.btl.tinder.ui.theme.TinderCloneTheme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -74,7 +74,7 @@ fun SwipeAppNavigation() {
             ProfileScreen(navController)
         }
         composable(DestinationScreen.Swipe.route) {
-            SwipeCards(navController)
+            SwipeScreen(navController, vm)
         }
         composable(DestinationScreen.ChatList.route) {
             ChatListScreen(navController)
