@@ -72,9 +72,10 @@ val deliusFontFamily = FontFamily(
     Font(R.font.delius_regular, FontWeight.Normal)
 )
 
-val deliusBold1FontFamily = FontFamily(
-    Font(R.font.delius_regular, FontWeight.Bold)
+val playpenFontFamily = FontFamily(
+    Font(R.font.playpen_sans_variable_font_wght, FontWeight.Normal)
 )
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
