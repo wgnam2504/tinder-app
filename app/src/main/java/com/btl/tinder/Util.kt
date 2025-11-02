@@ -25,7 +25,14 @@ import androidx.navigation.NavController
 import coil3.compose.AsyncImagePainter
 import coil3.compose.rememberAsyncImagePainter
 import es.dmoral.toasty.Toasty
-
+import androidx.compose.material3.Divider
+import android.R.attr.data
+import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.ui.layout.ContentScale
+import coil3.compose.AsyncImagePainter
+import coil3.compose.AsyncImagePainter.State.Empty.painter
+import coil3.compose.SubcomposeAsyncImage
+import coil3.compose.SubcomposeAsyncImageContent
 /**
  * Điều hướng đến một màn hình cụ thể trong ứng dụng thông qua [NavController].
  *
@@ -75,14 +82,14 @@ fun CheckSignedIn(vm: TCViewModel, navController: NavController) {
     val signedIn = vm.signedIn.value
     if (signedIn && !alreadyLoggedIn.value) {
         alreadyLoggedIn.value = true
-        navController.navigate(DestinationScreen.Swipe.route) {
+        navController.navigate(DestinationScreen.Profile.route) {
             popUpTo(0)
         }
     }
 }
 
 @Composable
-fun CommonDivider() {
+fun CommonDivider(){
     Divider(
         color = Color.LightGray,
         thickness = 1.dp,
@@ -96,18 +103,20 @@ fun CommonDivider() {
 fun CommonImage(
     data: String?,
     modifier: Modifier = Modifier.wrapContentSize(),
-    contentScale: ContentScale = ContentScale.Crop
-) {
-    val painter = rememberAsyncImagePainter(model = data) // Corrected to use named parameter 'model'
-    Image(
-        painter = painter,
+    contentScale : ContentScale = ContentScale.Crop
+){
+    SubcomposeAsyncImage(
+        model = data,
         contentDescription = null,
         modifier = modifier,
-        contentScale = contentScale
-    )
-    if (painter.state is AsyncImagePainter.State.Loading)
-        CommonProgressSpinner()
+        contentScale = contentScale,
+    ){
+        val state = painter.state
+        if(state is AsyncImagePainter.State.Loading){
+            CommonProgressSpinner()
+        }
+        else{
+            SubcomposeAsyncImageContent()
+        }
+    }
 }
-
-
-

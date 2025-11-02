@@ -71,7 +71,7 @@ fun SwipeAppNavigation() {
             LoginScreen(navController, vm)
         }
         composable(DestinationScreen.Profile.route) {
-            ProfileScreen(navController)
+            ProfileScreen(navController,vm)
         }
         composable(DestinationScreen.Swipe.route) {
             SwipeScreen(navController, vm)
