@@ -13,6 +13,8 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
+import android.net.Uri
+import java.util.UUID
 
 @HiltViewModel
 class TCViewModel @Inject constructor(
@@ -51,6 +53,13 @@ class TCViewModel @Inject constructor(
                                 createOrUpdateProfile(username = username)
                                 navController.navigate(DestinationScreen.Login.route)
                             }
+
+                            if (task.isSuccessful){
+                                signedIn.value = true
+                                createOrUpdateProfile(username = username)
+                            }
+
+
                             else
                                 handleException(task.exception, "Signup failed")
                         }
@@ -114,6 +123,7 @@ class TCViewModel @Inject constructor(
                     if (it.exists()) //Update
                         it.reference.update(userData.toMap())
                             .addOnSuccessListener {
+                                this.userData.value = userData
                                 inProgress.value = false
                                 popupNotification.value = Event("Profile updated")
                             }
@@ -154,6 +164,43 @@ class TCViewModel @Inject constructor(
         signedIn.value = false
         userData.value = null
         popupNotification.value = Event("Logged out")
+    }
+    fun updateProfileData(
+        name: String,
+        username: String,
+        bio: String,
+        gender: Gender,
+        genderPreference: Gender
+    ){
+        createOrUpdateProfile(
+            name = name,
+            username = username,
+            bio = bio,
+            gender = gender,
+            genderPreference = genderPreference
+        )
+    }
+    private fun uploadImage(uri: Uri, onImageUploaded: (Uri) -> Unit){
+        inProgress.value = true
+        val storageRef = storage.reference
+        val uuid = UUID.randomUUID()
+        val imageRef = storageRef.child("images/$uuid")
+        val uploadTask = imageRef.putFile(uri)
+        uploadTask
+            .addOnSuccessListener {
+                val res = it.metadata?.reference?.downloadUrl
+                res?.addOnSuccessListener(onImageUploaded)
+            }
+            .addOnFailureListener {
+                handleException(it)
+                inProgress.value = false
+
+            }
+    }
+    fun uploadProfileImage(uri: Uri){
+        uploadImage(uri){
+            createOrUpdateProfile(imageUrl = it.toString())
+        }
     }
 
     private fun handleException(exception: Exception? = null, customMessage: String = "") {
