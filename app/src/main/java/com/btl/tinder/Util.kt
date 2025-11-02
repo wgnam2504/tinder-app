@@ -28,8 +28,6 @@ import es.dmoral.toasty.Toasty
 import androidx.compose.material3.Divider
 import android.R.attr.data
 import androidx.compose.foundation.layout.wrapContentSize
-import androidx.compose.ui.layout.ContentScale
-import coil3.compose.AsyncImagePainter
 import coil3.compose.AsyncImagePainter.State.Empty.painter
 import coil3.compose.SubcomposeAsyncImage
 import coil3.compose.SubcomposeAsyncImageContent
