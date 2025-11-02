@@ -4,14 +4,20 @@ import android.util.Log
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.navigation.NavController
+import com.btl.tinder.data.COLLECTION_CHAT
 import com.btl.tinder.data.COLLECTION_USER
+import com.btl.tinder.data.ChatData
+import com.btl.tinder.data.ChatUser
 import com.btl.tinder.data.Event
 import com.btl.tinder.data.UserData
 import com.btl.tinder.ui.Gender
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.toObject
 import com.google.firebase.storage.FirebaseStorage
 import dagger.hilt.android.lifecycle.HiltViewModel
+import java.util.logging.Filter
 import javax.inject.Inject
 import android.net.Uri
 import java.util.UUID
@@ -27,6 +33,9 @@ class TCViewModel @Inject constructor(
     val popupNotification = mutableStateOf<Event<String>?>(null)
     val signedIn = mutableStateOf(false)
     val userData = mutableStateOf<UserData?>(null)
+
+    val matchProfiles = mutableStateOf<List<UserData>>(listOf())
+    val inProgressProfiles = mutableStateOf(false)
 
     init {
         auth.signOut()
@@ -149,12 +158,15 @@ class TCViewModel @Inject constructor(
         db.collection(COLLECTION_USER).document(uid)
             .addSnapshotListener { value, error ->
                 if (error != null) {
+                    Log.e("TCViewModel", "Error getting user data: ${error.message}")
                     handleException(error, "Cannot get user data")
                 }
                 if (value != null) {
                     val user = value.toObject(UserData::class.java)
                     userData.value = user
                     inProgress.value = false
+                    Log.d("TCViewModel", "User data loaded: ${userData.value}")
+                    populateCards()
                 }
             }
     }
@@ -210,6 +222,135 @@ class TCViewModel @Inject constructor(
         val message = if (customMessage.isEmpty()) errorMsg else "$customMessage: $errorMsg"
         popupNotification.value = Event(message)
         inProgress.value = false
+    }
+
+    private fun populateCards1() {
+        inProgressProfiles.value = true
+
+        val g = if (userData.value?.gender.isNullOrEmpty()) "ANY" else userData.value!!.gender!!.uppercase()
+        val gPref = if (userData.value?.genderPreference.isNullOrEmpty()) "ANY" else userData.value!!.genderPreference!!.uppercase()
+
+        val cardsQuery = when (Gender.valueOf(gPref)) {
+            Gender.MALE -> db.collection(COLLECTION_USER).whereEqualTo("gender", Gender.MALE)
+            Gender.FEMALE -> db.collection(COLLECTION_USER).whereEqualTo("gender", Gender.FEMALE)
+            Gender.ANY -> db.collection(COLLECTION_USER)
+        }
+        val userGender = Gender.valueOf(g)
+
+
+        cardsQuery.where(
+            com.google.firebase.firestore.Filter.and(
+                com.google.firebase.firestore.Filter.notEqualTo("userId", userData.value?.userId),
+                com.google.firebase.firestore.Filter.or(
+                    com.google.firebase.firestore.Filter.equalTo("genderPreference", userGender),
+                    com.google.firebase.firestore.Filter.equalTo("genderPreference", Gender.ANY)
+                )
+            )
+        )
+    }
+
+    private fun populateCards() {
+        inProgressProfiles.value = true
+        Log.d("TCViewModel", "populateCards called. Current User Data: ${userData.value}")
+
+        val g = if (userData.value?.gender.isNullOrEmpty()) "ANY"
+        else userData.value!!.gender!!.uppercase()
+        val gPref = if (userData.value?.genderPreference.isNullOrEmpty()) "ANY"
+        else userData.value!!.genderPreference!!.uppercase()
+
+        Log.d("TCViewModel", "User Gender: $g, Preference: $gPref")
+
+        val cardsQuery =
+            when (Gender.valueOf(gPref)) {
+                Gender.MALE -> db.collection(COLLECTION_USER)
+                    .whereEqualTo("gender", Gender.MALE)
+                Gender.FEMALE -> db.collection(COLLECTION_USER)
+                    .whereEqualTo("gender", Gender.FEMALE)
+                Gender.ANY -> db.collection(COLLECTION_USER)
+            }
+        val userGender = Gender.valueOf(g)
+
+        cardsQuery.where(
+            com.google.firebase.firestore.Filter.and(
+                com.google.firebase.firestore.Filter.notEqualTo("userId", userData.value?.userId),
+                com.google.firebase.firestore.Filter.or(
+                    com.google.firebase.firestore.Filter.equalTo("genderPreference", userGender),
+                    com.google.firebase.firestore.Filter.equalTo("genderPreference", Gender.ANY)
+                )
+            )
+        )
+            .addSnapshotListener { value, error ->
+                if (error != null) {
+                    inProgressProfiles.value = false
+                    Log.e("TCViewModel", "Error fetching cards: ${error.message}", error)
+                    handleException(error)
+                }
+                if (value != null) {
+                    Log.d("TCViewModel", "Fetched ${value.documents.size} documents from Firestore.")
+                    val potentials = mutableListOf<UserData>()
+                    value.documents.forEach {
+                        it.toObject<UserData>()?.let {potential ->
+                            var showUser = true
+                            Log.d("TCViewModel", "Processing potential user: ${potential.userId}, Name: ${potential.name}")
+                            if (
+                                userData.value?.swipesLeft?.contains(potential.userId) == true ||
+                                userData.value?.swipesRight?.contains(potential.userId) == true ||
+                                userData.value?.matches?.contains(potential.userId) == true
+                            ) {
+                                showUser = false
+                                Log.d("TCViewModel", "User ${potential.userId} already swiped/matched. Not showing.")
+                            }
+                            if (showUser)
+                                potentials.add(potential)
+                        }
+                    }
+
+                    Log.d("TCViewModel", "Found ${potentials.size} potential matches after filtering.")
+                    matchProfiles.value = potentials
+                    inProgressProfiles.value = false
+                }
+            }
+    }
+
+    fun onDislike(selectedUser: UserData) {
+        db.collection(COLLECTION_USER).document(userData.value?.userId ?: "")
+            .update("swipesLeft", FieldValue.arrayUnion(selectedUser.userId))
+    }
+
+    fun onLike(selectedUser: UserData) {
+        // Gốc ko có non-null
+        val reciprocalMatch = selectedUser.swipesRight?.contains(userData.value?.userId)
+        if (!reciprocalMatch!!) {
+            db.collection(COLLECTION_USER).document(userData.value?.userId ?: "")
+                .update("swipesRight", FieldValue.arrayUnion(selectedUser.userId))
+        } else {
+            popupNotification.value = Event("Match!")
+
+            db.collection(COLLECTION_USER).document(selectedUser.userId ?: "")
+                .update("swipesRight", FieldValue.arrayRemove(userData.value?.userId))
+            db.collection(COLLECTION_USER).document(selectedUser.userId ?: "")
+                .update("matches", FieldValue.arrayUnion(userData.value?.userId))
+            db.collection(COLLECTION_USER).document(userData.value?.userId ?: "")
+                .update("matches", FieldValue.arrayUnion(selectedUser.userId))
+
+            val chatKey = db.collection(COLLECTION_CHAT).document().id
+            val chatData = ChatData(
+                chatKey,
+                ChatUser(
+                    userData.value?.userId,
+                    if (userData.value?.name.isNullOrEmpty()) userData.value?.username
+                    else userData.value?.name,
+                    userData.value?.imageUrl
+                ),
+                ChatUser(
+                    selectedUser.userId,
+                    if (selectedUser.name.isNullOrEmpty()) selectedUser.username
+                    else selectedUser.name,
+                    selectedUser.imageUrl
+                )
+            )
+            db.collection(COLLECTION_CHAT).document(chatKey).set(chatData)
+        }
     }
 
 }
