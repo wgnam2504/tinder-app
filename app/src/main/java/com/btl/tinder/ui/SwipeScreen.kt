@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -114,7 +115,7 @@ fun SwipeScreen(navController: NavController, vm: TCViewModel) {
             Box(
                 modifier = Modifier
                     .padding(24.dp)
-                    .aspectRatio(0.9f)
+                    .aspectRatio(0.8f)
             ) {
                 Column(
                     modifier = Modifier.fillMaxSize(),
@@ -257,7 +258,15 @@ private fun ProfileCard(
     modifier: Modifier,
     matchProfile: UserData,
 ) {
-    Card(modifier) {
+    Card(modifier
+        .shadow(
+            elevation = 8.dp,
+            ambientColor = Color.Black.copy(alpha = 0.15f),
+            spotColor = Color.Black.copy(alpha = 0.25f),
+            shape = RoundedCornerShape(16.dp),
+            clip = false
+        )
+    ) {
         Box {
             CommonImage(matchProfile.imageUrl, modifier = Modifier.fillMaxSize())
             Scrim(Modifier.align(Alignment.BottomCenter))
