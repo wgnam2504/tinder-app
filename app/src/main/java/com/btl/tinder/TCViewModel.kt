@@ -3,6 +3,7 @@ package com.btl.tinder
 import android.util.Log
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
+import androidx.navigation.NavController
 import com.btl.tinder.data.COLLECTION_USER
 import com.btl.tinder.data.Event
 import com.btl.tinder.data.UserData
@@ -26,7 +27,7 @@ class TCViewModel @Inject constructor(
     val userData = mutableStateOf<UserData?>(null)
 
     init {
-        // auth.signOut()
+        auth.signOut()
         val currentUser = auth.currentUser
         signedIn.value = currentUser != null
         currentUser?.uid?.let { uid ->
@@ -34,7 +35,7 @@ class TCViewModel @Inject constructor(
         }
     }
 
-    fun onSignup(username: String, email: String, pass: String) {
+    fun onSignup(username: String, email: String, pass: String, navController: NavController) {
         if (username.isEmpty() or email.isEmpty() or pass.isEmpty()) {
             handleException(customMessage = "Please fill in all fields")
             return
@@ -46,8 +47,10 @@ class TCViewModel @Inject constructor(
                 if (it.isEmpty) {
                     auth.createUserWithEmailAndPassword(email, pass)
                         .addOnCompleteListener {task ->
-                            if (task.isSuccessful)
+                            if (task.isSuccessful) {
                                 createOrUpdateProfile(username = username)
+                                navController.navigate(DestinationScreen.Login.route)
+                            }
                             else
                                 handleException(task.exception, "Signup failed")
                         }
@@ -140,7 +143,7 @@ class TCViewModel @Inject constructor(
                 }
                 if (value != null) {
                     val user = value.toObject(UserData::class.java)
-                    this.userData.value = user
+                    userData.value = user
                     inProgress.value = false
                 }
             }
@@ -161,5 +164,5 @@ class TCViewModel @Inject constructor(
         popupNotification.value = Event(message)
         inProgress.value = false
     }
-    
+
 }
