@@ -97,7 +97,7 @@ fun SwipeScreen(navController: NavController, vm: TCViewModel) {
                             Offset(.5f, 1f) to Color(0xFF744D8C),
                             Offset(1f, 1f) to Color(0xFF744D8C),
                         ),
-                    ), resolutionY = 32
+                    ),
                 )
         ) {
             // Spacer
