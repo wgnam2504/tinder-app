@@ -38,7 +38,7 @@ class TCViewModel @Inject constructor(
     val inProgressProfiles = mutableStateOf(false)
 
     init {
-        auth.signOut()
+        //auth.signOut()
         val currentUser = auth.currentUser
         signedIn.value = currentUser != null
         currentUser?.uid?.let { uid ->
