@@ -36,7 +36,7 @@ class TCViewModel @Inject constructor(
     val inProgressProfiles = mutableStateOf(false)
 
     init {
-        //auth.signOut()
+        auth.signOut()
         val currentUser = auth.currentUser
         signedIn.value = currentUser != null
         currentUser?.uid?.let { uid ->
@@ -305,7 +305,5 @@ class TCViewModel @Inject constructor(
             db.collection(COLLECTION_CHAT).document(chatKey).set(chatData)
         }
     }
-
-
 
 }

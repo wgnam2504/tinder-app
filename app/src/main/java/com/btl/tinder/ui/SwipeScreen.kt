@@ -217,7 +217,13 @@ private fun ProfileCard(
     modifier: Modifier,
     matchProfile: UserData,
 ) {
-    Card(modifier) {
+    Card(modifier = modifier
+        .shadow(
+            elevation = 12.dp,
+            ambientColor = Color.Black.copy(alpha = 0.4f),
+            spotColor = Color.Black.copy(alpha = 0.4f)
+        )
+    ) {
         Box {
             CommonImage(matchProfile.imageUrl, modifier = Modifier.fillMaxSize())
             Scrim(Modifier.align(Alignment.BottomCenter))
