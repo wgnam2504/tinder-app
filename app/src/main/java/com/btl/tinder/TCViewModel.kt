@@ -10,8 +10,10 @@ import com.btl.tinder.data.UserData
 import com.btl.tinder.ui.Gender
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.toObject
 import com.google.firebase.storage.FirebaseStorage
 import dagger.hilt.android.lifecycle.HiltViewModel
+import java.util.logging.Filter
 import javax.inject.Inject
 
 @HiltViewModel
@@ -25,6 +27,9 @@ class TCViewModel @Inject constructor(
     val popupNotification = mutableStateOf<Event<String>?>(null)
     val signedIn = mutableStateOf(false)
     val userData = mutableStateOf<UserData?>(null)
+
+    val matchProfiles = mutableStateOf<List<UserData>>(listOf())
+    val inProgressProfiles = mutableStateOf(false)
 
     init {
         auth.signOut()
@@ -145,6 +150,7 @@ class TCViewModel @Inject constructor(
                     val user = value.toObject(UserData::class.java)
                     userData.value = user
                     inProgress.value = false
+                    populateCards()
                 }
             }
     }
@@ -163,6 +169,86 @@ class TCViewModel @Inject constructor(
         val message = if (customMessage.isEmpty()) errorMsg else "$customMessage: $errorMsg"
         popupNotification.value = Event(message)
         inProgress.value = false
+    }
+
+    private fun populateCards1() {
+        inProgressProfiles.value = true
+
+        val g = if (userData.value?.gender.isNullOrEmpty()) "ANY" else userData.value!!.gender!!.uppercase()
+        val gPref = if (userData.value?.genderPreference.isNullOrEmpty()) "ANY" else userData.value!!.genderPreference!!.uppercase()
+
+        val cardsQuery = when (Gender.valueOf(gPref)) {
+            Gender.MALE -> db.collection(COLLECTION_USER).whereEqualTo("gender", Gender.MALE)
+            Gender.FEMALE -> db.collection(COLLECTION_USER).whereEqualTo("gender", Gender.FEMALE)
+            Gender.ANY -> db.collection(COLLECTION_USER)
+        }
+        val userGender = Gender.valueOf(g)
+
+
+        cardsQuery.where(
+            com.google.firebase.firestore.Filter.and(
+                com.google.firebase.firestore.Filter.notEqualTo("userId", userData.value?.userId),
+                com.google.firebase.firestore.Filter.or(
+                    com.google.firebase.firestore.Filter.equalTo("genderPreference", userGender),
+                    com.google.firebase.firestore.Filter.equalTo("genderPreference", Gender.ANY)
+                )
+            )
+        )
+
+    }
+
+    private fun populateCards() {
+        inProgressProfiles.value = true
+
+        val g = if (userData.value?.gender.isNullOrEmpty()) "ANY"
+        else userData.value!!.gender!!.uppercase()
+        val gPref = if (userData.value?.genderPreference.isNullOrEmpty()) "ANY"
+        else userData.value!!.genderPreference!!.uppercase()
+
+        val cardsQuery =
+            when (Gender.valueOf(gPref)) {
+                Gender.MALE -> db.collection(COLLECTION_USER)
+                    .whereEqualTo("gender", Gender.MALE)
+                Gender.FEMALE -> db.collection(COLLECTION_USER)
+                    .whereEqualTo("gender", Gender.FEMALE)
+                Gender.ANY -> db.collection(COLLECTION_USER)
+            }
+        val userGender = Gender.valueOf(g)
+
+        cardsQuery.where(
+            com.google.firebase.firestore.Filter.and(
+                com.google.firebase.firestore.Filter.notEqualTo("userId", userData.value?.userId),
+                com.google.firebase.firestore.Filter.or(
+                    com.google.firebase.firestore.Filter.equalTo("genderPreference", userGender),
+                    com.google.firebase.firestore.Filter.equalTo("genderPreference", Gender.ANY)
+                )
+            )
+        )
+            .addSnapshotListener { value, error ->
+                if (error != null) {
+                    inProgressProfiles.value = false
+                    handleException(error)
+                }
+                if (value != null) {
+                    val potentials = mutableListOf<UserData>()
+                    value.documents.forEach {
+                        it.toObject<UserData>()?.let {potential ->
+                            var showUser = true
+                            if (
+                                userData.value?.swipeLeft?.contains(potential.userId) == true ||
+                                userData.value?.swipeRight?.contains(potential.userId) == true ||
+                                userData.value?.matches?.contains(potential.userId) == true
+                            )
+                                showUser = false
+                            if (showUser)
+                                potentials.add(potential)
+                        }
+                    }
+
+                    matchProfiles.value = potentials
+                    inProgressProfiles.value = false
+                }
+            }
     }
 
 }
