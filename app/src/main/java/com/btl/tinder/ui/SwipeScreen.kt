@@ -26,11 +26,15 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
@@ -72,14 +76,17 @@ fun SwipeScreen(navController: NavController, vm: TCViewModel) {
         }
     }
 
-    if (inProgress)
-        CommonProgressSpinner()
-    else {
-        val profiles = vm.matchProfiles.value
+    val profiles = vm.matchProfiles.value
+    val states = profiles.map { it to rememberSwipeableCardState() }
+
+    // Triggers for left and right button animations
+    val animateLeftButtonTrigger = remember { mutableStateOf(0) }
+    val animateRightButtonTrigger = remember { mutableStateOf(0) }
+
+    Box(modifier = Modifier.fillMaxSize()) { // Main Box for overlay
         Column(
             verticalArrangement = Arrangement.SpaceBetween,
-            modifier = Modifier
-                .fillMaxSize()
+            modifier = Modifier.fillMaxSize()
                 .meshGradient(
                     points = listOf(
                         listOf(
@@ -104,7 +111,6 @@ fun SwipeScreen(navController: NavController, vm: TCViewModel) {
             Spacer(modifier = Modifier.height(1.dp))
 
             // Cards
-            val states = profiles.map { it to rememberSwipeableCardState() }
             Box(
                 modifier = Modifier
                     .padding(24.dp)
@@ -115,7 +121,7 @@ fun SwipeScreen(navController: NavController, vm: TCViewModel) {
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
                 ) {
-                    Text(text = "No more profiles available")
+                    Text(text = "No more profiles available", fontFamily = deliusFontFamily, fontWeight = FontWeight.W600)
                 }
                 states.forEach { (matchProfile, state) ->
                     ProfileCard(
@@ -124,26 +130,31 @@ fun SwipeScreen(navController: NavController, vm: TCViewModel) {
                             .swipableCard(
                                 state = state,
                                 blockedDirections = listOf(Direction.Down),
-                                onSwiped = {},
+                                onSwiped = { direction -> // Handle swipe direction here
+                                    when (direction) {
+                                        Direction.Left, Direction.Down -> {
+                                            Log.d("SwipeScreen", "Card swiped Left/Down. Triggering left button animation and dislike.")
+                                            animateLeftButtonTrigger.value++
+                                            vm.onDislike(matchProfile)
+                                        }
+                                        Direction.Right, Direction.Up -> {
+                                            Log.d("SwipeScreen", "Card swiped Right/Up. Triggering right button animation and like.")
+                                            animateRightButtonTrigger.value++
+                                            vm.onLike(matchProfile)
+                                        }
+                                        null -> { /* Should not happen with onSwiped callback */ }
+                                    }
+                                },
                                 onSwipeCancel = { Log.d("Swipeable card", "Cancelled swipe") }),
                         matchProfile = matchProfile
                     )
-                    LaunchedEffect(matchProfile, state.swipedDirection) {
-                        if (state.swipedDirection != null) {
-                            if (state.swipedDirection == Direction.Left ||
-                                state.swipedDirection == Direction.Down
-                            ) {
-                                vm.onDislike(matchProfile)
-                            } else {
-                                vm.onLike(matchProfile)
-                            }
-                        }
-                    }
+                    // Removed LaunchedEffect for swipedDirection from here
                 }
             }
 
             // Buttons
             val scope = rememberCoroutineScope()
+
             Row(
                 modifier = Modifier
                     .padding(24.dp)
@@ -152,20 +163,16 @@ fun SwipeScreen(navController: NavController, vm: TCViewModel) {
             ) {
                 CircleButton(onClick = {
                     scope.launch {
-                        val last = states.reversed().firstOrNull {
-                            it.second.offset.value == Offset(0f, 0f)
-                        }?.second
+                        val last = states.reversed().firstOrNull { it.second.offset.value == Offset(0f, 0f) }?.second
                         last?.swipe(Direction.Left)
                     }
-                }, drawableResId = R.drawable.cancel, backgroundColor = Color(0xFFE91E63))
+                }, drawableResId = R.drawable.cancel, backgroundColor = Color(0xFFE91E63), animateTrigger = animateLeftButtonTrigger.value)
                 CircleButton(onClick = {
                     scope.launch {
-                        val last = states.reversed().firstOrNull {
-                            it.second.offset.value == Offset(0f, 0f)
-                        }?.second
+                        val last = states.reversed().firstOrNull { it.second.offset.value == Offset(0f, 0f) }?.second
                         last?.swipe(Direction.Right)
                     }
-                }, drawableResId = R.drawable.love, backgroundColor = Color(0xFF673AB7))
+                }, drawableResId = R.drawable.love, backgroundColor = Color(0xFF673AB7), animateTrigger = animateRightButtonTrigger.value)
             }
 
             // Bottom nav bar
@@ -174,41 +181,74 @@ fun SwipeScreen(navController: NavController, vm: TCViewModel) {
                 navController = navController
             )
         }
+        // Spinner as an overlay
+        if (inProgress)
+            CommonProgressSpinner()
     }
 }
 
 @Composable
 private fun CircleButton(
     onClick: () -> Unit,
-    icon: ImageVector? = null,
     drawableResId: Int,
-    backgroundColor: Color
+    backgroundColor: Color,
+    animateTrigger: Int = 0 // New parameter for external animation trigger
 ) {
-    IconButton(
-        modifier = Modifier
-            .shadow(
-                elevation = 12.dp,
-                shape = CircleShape,
-                ambientColor = Color.Black.copy(alpha = 0.4f),
-                spotColor = Color.Black.copy(alpha = 0.4f)
-            ) // Added shadow modifier
-            .clip(CircleShape)
-            .background(Color.White)
-            .size(89.dp)
-            .border(5.dp, backgroundColor, CircleShape),
-        onClick = onClick
-    ) {
-//        Icon(
-//            icon, null,
-//            tint = MaterialTheme.colorScheme.onPrimary
-//        )
-        Image(
-            painter = painterResource(id = drawableResId),
-            contentDescription = "Button icon",
-            modifier = Modifier.aspectRatio(0.5f, true),
-            alignment = Alignment.Center,
-            contentScale = ContentScale.Inside,
+    val scope = rememberCoroutineScope()
+    val scale = remember { Animatable(1f) }
+
+    // Reusable animation logic
+    suspend fun playAnimation() {
+        Log.d("CircleButton", "Playing animation. Scale before 1.2f: ${scale.value}")
+        scale.animateTo(
+            targetValue = 1.2f,
+            animationSpec = tween(durationMillis = 200) // Shorter duration for quick feedback
         )
+        Log.d("CircleButton", "Scale after 1.2f: ${scale.value}")
+        scale.animateTo(
+            targetValue = 1f,
+            animationSpec = tween(durationMillis = 200) // Shorter duration
+        )
+        Log.d("CircleButton", "Scale after 1f: ${scale.value}")
+    }
+
+    // LaunchedEffect để lắng nghe trigger từ bên ngoài (swipe)
+    LaunchedEffect(animateTrigger) {
+        if (animateTrigger > 0) { // Only trigger if value has increased (i.e., not initial 0)
+            Log.d("CircleButton", "LaunchedEffect triggered with animateTrigger: $animateTrigger")
+            playAnimation()
+        }
+    }
+
+    Box(modifier = Modifier.scale(scale.value)) {
+        IconButton(
+            modifier = Modifier
+                .shadow(
+                    elevation = 12.dp,
+                    shape = CircleShape,
+                    ambientColor = Color.Black.copy(alpha = 0.4f),
+                    spotColor = Color.Black.copy(alpha = 0.4f)
+                )
+                .clip(CircleShape)
+                .background(Color.White)
+                .size(89.dp)
+                .border(5.dp, backgroundColor, CircleShape),
+            onClick = {
+                // Handle direct button click
+                scope.launch {
+                    playAnimation()
+                    onClick.invoke() // Call original onClick after button's own animation
+                }
+            }
+        ) {
+            Image(
+                painter = painterResource(id = drawableResId),
+                contentDescription = "Button icon",
+                modifier = Modifier.aspectRatio(0.5f, true),
+                alignment = Alignment.Center,
+                contentScale = ContentScale.Inside,
+            )
+        }
     }
 }
 
@@ -217,13 +257,7 @@ private fun ProfileCard(
     modifier: Modifier,
     matchProfile: UserData,
 ) {
-    Card(modifier = modifier
-        .shadow(
-            elevation = 12.dp,
-            ambientColor = Color.Black.copy(alpha = 0.4f),
-            spotColor = Color.Black.copy(alpha = 0.4f)
-        )
-    ) {
+    Card(modifier) {
         Box {
             CommonImage(matchProfile.imageUrl, modifier = Modifier.fillMaxSize())
             Scrim(Modifier.align(Alignment.BottomCenter))
@@ -253,5 +287,4 @@ fun Scrim(modifier: Modifier = Modifier) {
         modifier
             .background(Brush.verticalGradient(listOf(Color.Transparent, Color.Black)))
             .height(180.dp)
-            .fillMaxWidth())
-}
+            .fillMaxWidth())}
