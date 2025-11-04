@@ -241,6 +241,7 @@ fun SignupScreen(navController: NavController, vm: TCViewModel) {
                 ) {
                     Text(
                         text = "Sign Up",
+                        color = Color.Black,
                         fontFamily = deliusFontFamily,
                         fontWeight = FontWeight.W600,
                         fontSize = 18.sp

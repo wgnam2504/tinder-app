@@ -105,7 +105,8 @@ fun LoginScreen(navController: NavController, vm: TCViewModel) {
                 modifier = Modifier
                     .padding(start = 8.dp, end = 8.dp, bottom = 8.dp),
                 fontSize = 50.sp,
-                fontFamily = pacificoFontFamily
+                fontFamily = pacificoFontFamily,
+                color = Color.Black
             )
 
             OutlinedTextField(
@@ -187,7 +188,8 @@ fun LoginScreen(navController: NavController, vm: TCViewModel) {
                         text = "Log In",
                         fontFamily = deliusFontFamily,
                         fontWeight = FontWeight.W600,
-                        fontSize = 18.sp
+                        fontSize = 18.sp,
+                        color = Color.Black
                     )
                 }
             }
