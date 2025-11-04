@@ -122,7 +122,7 @@ fun SwipeScreen(navController: NavController, vm: TCViewModel) {
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
                 ) {
-                    Text(text = "No more profiles available", fontFamily = deliusFontFamily, fontWeight = FontWeight.W600)
+                    Text(text = "No more profiles available", fontFamily = deliusFontFamily, fontWeight = FontWeight.W600, color = Color.Black)
                 }
                 states.forEach { (matchProfile, state) ->
                     ProfileCard(
@@ -272,14 +272,14 @@ private fun ProfileCard(
             Scrim(Modifier.align(Alignment.BottomCenter))
             Column(Modifier.align(Alignment.BottomStart)) {
                 Text(text = matchProfile.name ?: matchProfile.username ?: "",
-                    color = MaterialTheme.colorScheme.onPrimary,
+                    color = Color.White,
                     fontFamily = deliusFontFamily,
                     fontSize = 36.sp,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(start = 10.dp, end = 10.dp, top = 10.dp))
                 if (!matchProfile.bio.isNullOrEmpty()) {
                     Text(text = matchProfile.bio!!,
-                        color = MaterialTheme.colorScheme.onPrimary,
+                        color = Color.White,
                         fontFamily = playpenFontFamily,
                         fontSize = 16.sp,
                         modifier = Modifier.padding(start = 10.dp, end = 10.dp, bottom = 10.dp)
