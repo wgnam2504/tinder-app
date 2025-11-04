@@ -2,7 +2,6 @@ package com.btl.tinder.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
@@ -45,14 +44,29 @@ import androidx.compose.foundation.layout.size
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.sp
+import meshGradient
 
 enum class Gender {
     MALE, FEMALE, ANY
 }
 
 @Composable
-fun ProfileScreen(navController: NavController,vm: TCViewModel) {
+fun ProfileScreen(navController: NavController, vm: TCViewModel) {
     val inProgress = vm.inProgress.value
+
     if (inProgress)
         CommonProgressSpinner()
     else{
@@ -72,9 +86,9 @@ fun ProfileScreen(navController: NavController,vm: TCViewModel) {
         }
 
         val scrollState = rememberScrollState()
-        Column{
+        Column(modifier = Modifier.background(Color.White)){
             ProfileContent(
-                modifier = Modifier.weight(1f).verticalScroll(scrollState).padding(8.dp),
+                modifier = Modifier.weight(1f).verticalScroll(scrollState).padding(top = 32.dp),
                 vm=vm,
                 name=name,
                 username=username,
@@ -145,6 +159,8 @@ fun ProfileContent(
             )
         }
 
+        CommonDivider()
+
         Row(modifier = Modifier.fillMaxWidth().padding(4.dp), verticalAlignment = Alignment.CenterVertically)
         {
             Text("Name",modifier = Modifier.width(100.dp))
@@ -206,7 +222,7 @@ fun ProfileContent(
                         selected = genderPreference ==Gender.MALE,
                         onClick = {onGenderPreferenceChange(Gender.MALE) })
                     Text(
-                        text = "Men",
+                        text = "Male",
                         modifier = Modifier
                             .padding(4.dp)
                             .clickable{onGenderPreferenceChange(Gender.MALE)})
@@ -217,7 +233,7 @@ fun ProfileContent(
                         selected = genderPreference ==Gender.FEMALE,
                         onClick = {onGenderPreferenceChange(Gender.FEMALE) })
                     Text(
-                        text = "Women",
+                        text = "Female",
                         modifier = Modifier
                             .padding(4.dp)
                             .clickable{onGenderPreferenceChange(Gender.FEMALE)})
@@ -228,7 +244,7 @@ fun ProfileContent(
                         selected = genderPreference ==Gender.ANY,
                         onClick = {onGenderPreferenceChange(Gender.ANY) })
                     Text(
-                        text = "Everyone",
+                        text = "Any",
                         modifier = Modifier
                             .padding(4.dp)
                             .clickable{onGenderPreferenceChange(Gender.ANY)})
@@ -237,9 +253,42 @@ fun ProfileContent(
             }
         }
         CommonDivider()
-        Row(modifier = Modifier.fillMaxWidth().padding(4.dp), verticalAlignment = Alignment.CenterVertically)
+        Row(modifier = Modifier.fillMaxWidth().padding(4.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center)
         {
-            Text("Logout",Modifier.clickable {onLogout.invoke()})
+            Button(
+                modifier = Modifier
+                    .fillMaxWidth(0.6f)
+                    .height(50.dp)
+                    .clickable {onLogout.invoke()},
+                colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
+                shape = RoundedCornerShape(25.dp),
+                contentPadding = PaddingValues(),
+                onClick = { onLogout.invoke() }
+            ) {
+                Box(
+                    modifier = Modifier
+                        .background(
+                            brush = Brush.horizontalGradient(
+                                colors = listOf(
+                                    Color(0xFFFF789B),
+                                    Color(0xFFD7274E)
+                                )
+                            ),
+                            shape = RoundedCornerShape(25.dp)
+                        )
+                        .fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "Logout",
+                        color = Color.Black,
+                        fontFamily = deliusFontFamily,
+                        fontWeight = FontWeight.W600,
+                        fontSize = 18.sp
+                    )
+                }
+            }
+//            Text("Logout",Modifier.clickable {onLogout.invoke()})
         }
     }
 }
@@ -255,15 +304,48 @@ fun ProfileImage(imageUrl : String?,vm: TCViewModel) {
         uri?.let {vm.uploadProfileImage(uri)}
     }
 
-    Box(modifier = Modifier.height(IntrinsicSize.Min)) {
-        Column(modifier = Modifier.padding(8.dp).fillMaxWidth().clickable{
+    val animatedPoint = remember { Animatable(.8f) }
+    LaunchedEffect(Unit) {
+        while (true) {
+            animatedPoint.animateTo(
+                targetValue = .1f,
+                animationSpec = tween(durationMillis = 10000)
+            )
+            animatedPoint.animateTo(
+                targetValue = .9f,
+                animationSpec = tween(durationMillis = 10000)
+            )
+        }
+    }
+
+    Box(modifier = Modifier.height(IntrinsicSize.Min).padding(0.dp)
+        .meshGradient(
+        points = listOf(
+            listOf(
+                Offset(0f, 0f) to Color(0xFFFFB3C6),
+                Offset(.5f, 0f) to Color(0xFFFFB3C6),
+                Offset(1f, 0f) to Color(0xFFFFB3C6),
+            ),
+            listOf(
+                Offset(0f, .5f) to Color(0xFFFF7898),
+                Offset(.5f, .9f) to Color(0xFFFF7898),
+                Offset(1f, .5f) to Color(0xFFFF7898),
+            ),
+            listOf(
+                Offset(0f, 1f) to Color(0xFFF83460),
+                Offset(.5f, 1f) to Color(0xFFF83460),
+                Offset(1f, 1f) to Color(0xFFF83460),
+            ),
+        ),
+    )) {
+        Column(modifier = Modifier.padding(8.dp).padding(top = 16.dp, bottom = 16.dp).fillMaxWidth().clickable{
             launcher.launch("image/*")
         },horizontalAlignment = Alignment.CenterHorizontally)
         {
             Card(shape = CircleShape,modifier = Modifier.padding(8.dp).size(100.dp)){
                 CommonImage(data = imageUrl)
             }
-            Text("Change profile picture")
+            Text("Change profile picture", fontFamily = deliusFontFamily, color = Color.Black, fontWeight = FontWeight.Bold)
         }
         val isLoading = vm.inProgress.value
         if(isLoading){
