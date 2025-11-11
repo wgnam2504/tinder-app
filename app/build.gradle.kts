@@ -111,4 +111,11 @@ dependencies {
 
     implementation(libs.toasty)
 
+
+    val streamChat = "6.26.0"
+    implementation("io.getstream:stream-chat-android-offline:$streamChat")
+    implementation("io.getstream:stream-chat-android-compose:$streamChat")
+
+    implementation("androidx.compose.material:material-icons-extended:1.7.8")
+
 }
