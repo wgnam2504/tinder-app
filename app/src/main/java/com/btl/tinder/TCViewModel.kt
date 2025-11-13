@@ -1,5 +1,6 @@
 package com.btl.tinder
 
+import android.net.Uri
 import android.util.Log
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
@@ -11,16 +12,18 @@ import com.btl.tinder.data.ChatUser
 import com.btl.tinder.data.Event
 import com.btl.tinder.data.UserData
 import com.btl.tinder.ui.Gender
+import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.toObject
+import com.google.firebase.FirebaseApp
+import com.google.firebase.functions.FirebaseFunctions
+import com.google.firebase.functions.functions
 import com.google.firebase.storage.FirebaseStorage
 import dagger.hilt.android.lifecycle.HiltViewModel
-import java.util.logging.Filter
-import javax.inject.Inject
-import android.net.Uri
 import java.util.UUID
+import javax.inject.Inject
 
 @HiltViewModel
 class TCViewModel @Inject constructor(
@@ -353,4 +356,33 @@ class TCViewModel @Inject constructor(
         }
     }
 
+    fun getStreamToken(userId: String, onComplete: (String) -> Unit) {
+        // Lấy instance đúng cách
+        val functions: FirebaseFunctions = Firebase.functions
+
+        val data = hashMapOf("userId" to userId)
+
+        functions
+            .getHttpsCallable("getStreamToken")
+            .call(data)
+            .continueWith { task ->
+                // Lấy kết quả dưới dạng Map
+                val result = task.result?.data as? Map<String, Any>
+                result?.get("token") as? String
+            }
+            .addOnCompleteListener { task ->
+                if (!task.isSuccessful) {
+                    // Xử lý lỗi
+                    handleException(task.exception, "Could not get Stream token.")
+                } else {
+                    val token = task.result
+                    if (token != null) {
+                        // Lấy token thành công
+                        onComplete(token)
+                    }
+                }
+            }
+    }
+
 }
+
