@@ -1,6 +1,7 @@
 package com.btl.tinder.ui
 
 import android.util.Log
+import androidx.activity.ComponentActivity
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
@@ -84,6 +85,8 @@ fun ChatListScreen(navController: NavController, vm: TCViewModel) {
 
     val clientInitializationState by client.clientState.initializationState.collectAsState()
 
+
+
     // UI
     Box(modifier = Modifier.fillMaxSize()) {
         Column(
@@ -95,13 +98,18 @@ fun ChatListScreen(navController: NavController, vm: TCViewModel) {
         ) {
             when (clientInitializationState) {
                 InitializationState.COMPLETE -> {
+
+                    val context = LocalContext.current
+                    val activity = context as? ComponentActivity
+
                     ChatTheme {
                         ChannelsScreen(
                             title = "Chats",
                             onChannelClick = { channel ->
-                                val singleChatRoute =
-                                    DestinationScreen.SingleChat.createRoute(channel.cid)
-                                navController.navigate(singleChatRoute)
+                                // ✅ Mở Activity thay vì navigate
+                                context.startActivity(
+                                    SingleChatScreen.getIntent(context, channel.cid)
+                                )
                             },
                             onBackPressed = { navController.popBackStack() }
                         )
