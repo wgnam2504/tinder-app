@@ -1,61 +1,68 @@
-/**
- * Import function triggers from their respective submodules:
- *
- * const {onCall} = require("firebase-functions/v2/https");
- * const {onDocumentWritten} = require("firebase-functions/v2/firestore");
- *
- * See a full list of supported triggers at https://firebase.google.com/docs/functions
- */
 
-const {setGlobalOptions} = require("firebase-functions");
-const {onRequest} = require("firebase-functions/https");
-const logger = require("firebase-functions/logger");
-
-// For cost control, you can set the maximum number of containers that can be
-// running at the same time. This helps mitigate the impact of unexpected
-// traffic spikes by instead downgrading performance. This limit is a
-// per-function limit. You can override the limit for each function using the
-// `maxInstances` option in the function's options, e.g.
-// `onRequest({ maxInstances: 5 }, (req, res) => { ... })`.
-// NOTE: setGlobalOptions does not apply to functions using the v1 API. V1
-// functions should each use functions.runWith({ maxInstances: 10 }) instead.
-// In the v1 API, each function can only serve one request per container, so
-// this will be the maximum concurrent request count.
-setGlobalOptions({ maxInstances: 10 });
-
-// Create and deploy your first functions
-// https://firebase.google.com/docs/functions/get-started
-
-// exports.helloWorld = onRequest((request, response) => {
-//   logger.info("Hello logs!", {structuredData: true});
-//   response.send("Hello from Firebase!");
-// });
-
-// Import các module cần thiết
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
 const { StreamChat } = require("stream-chat");
+const fs = require("fs");
+const path = require("path");
 
-// Khởi tạo Firebase Admin SDK
+// Initialize Firebase Admin SDK
 admin.initializeApp();
 
-// Lấy key và secret từ biến môi trường đã cấu hình
-const api_key = functions.config().stream.key;
-const api_secret = functions.config().stream.secret;
+let api_key;
+let api_secret;
+
+// --- Bulletproof Config Loading - V2 (Handles file encoding issues) ---
+// Check if we are running in the emulator
+if (process.env.FUNCTIONS_EMULATOR === 'true') {
+  console.log("Emulator environment detected. Loading config manually from .runtimeconfig.json");
+  try {
+    // Construct the path to the file
+    const configPath = path.join(__dirname, '.runtimeconfig.json');
+    
+    // Read the file as a raw string
+    let fileContent = fs.readFileSync(configPath, 'utf8');
+    
+    // Check for and remove the BOM (Byte Order Mark) character
+    if (fileContent.charCodeAt(0) === 0xFEFF) {
+      console.log("BOM detected. Stripping it from the file content.");
+      fileContent = fileContent.slice(1);
+    }
+
+    // Parse the cleaned-up string as JSON
+    const runtimeConfig = JSON.parse(fileContent);
+
+    api_key = runtimeConfig.stream.key;
+    api_secret = runtimeConfig.stream.secret;
+    console.log("Successfully loaded config from .runtimeconfig.json");
+  } catch (error) {
+    console.error(
+      "FATAL ERROR: Could not load or parse .runtimeconfig.json.",
+      "Please ensure the file exists in the /functions directory and is valid JSON.",
+      error
+    );
+  }
+} else {
+  // We are in the deployed production environment
+  console.log("Production environment detected. Loading from functions.config()");
+  try {
+    api_key = functions.config().stream.key;
+    api_secret = functions.config().stream.secret;
+  } catch (error) {
+     console.error(
+      "FATAL ERROR: Could not load functions.config().",
+      "Please ensure you have set the config on Firebase using 'firebase functions:config:set stream.key=...' etc.",
+      error
+    );
+  }
+}
+// --- End of Bulletproof Config Loading ---
+
 
 /**
- * Cloud Function này được kích hoạt qua HTTP request.
- * Nó sẽ tạo một token cho GetStream Chat.
- *
- * Cách gọi từ client: Gửi một POST request đến URL của function với body là:
- * {
- *   "data": {
- *     "userId": "THE_USER_ID_TO_GENERATE_TOKEN_FOR"
- *   }
- * }
+ * Creates a Stream Chat token for an authenticated user.
  */
 exports.getStreamToken = functions.https.onCall(async (data, context) => {
-  // Kiểm tra xem người dùng đã xác thực với Firebase chưa
+  // Check if the user is authenticated
   if (!context.auth) {
     throw new functions.https.HttpsError(
       "unauthenticated",
@@ -70,16 +77,24 @@ exports.getStreamToken = functions.https.onCall(async (data, context) => {
       "The function must be called with a 'userId' argument."
     );
   }
+  
+  // Final check to ensure keys are loaded
+  if (!api_key || !api_secret) {
+      throw new functions.https.HttpsError(
+          "internal",
+          "Stream API key or secret is not configured correctly on the server."
+      );
+  }
 
-  // Khởi tạo Stream-Chat server client
+  // Initialize the Stream Chat server client
   const serverClient = StreamChat.getInstance(api_key, api_secret);
 
   try {
-    // Tạo token cho user ID được cung cấp
+    // Create a token for the given user
     const token = serverClient.createToken(userId);
     console.log(`Successfully created token for user: ${userId}`);
 
-    // Trả token về cho client
+    // Return the token to the client
     return { token: token };
   } catch (error) {
     console.error(`Unable to create Stream token for user: ${userId}`, error);

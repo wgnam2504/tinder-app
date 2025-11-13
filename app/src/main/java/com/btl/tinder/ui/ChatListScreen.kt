@@ -1,16 +1,18 @@
 package com.btl.tinder.ui
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
+import android.util.Log
+import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.btl.tinder.DestinationScreen
 import com.btl.tinder.TCViewModel
+import com.google.firebase.Firebase
+import com.google.firebase.auth.auth
 import io.getstream.chat.android.client.ChatClient
 import io.getstream.chat.android.client.logger.ChatLogLevel
 import io.getstream.chat.android.compose.ui.channels.ChannelsScreen
@@ -20,16 +22,12 @@ import io.getstream.chat.android.models.User
 import io.getstream.chat.android.offline.plugin.factory.StreamOfflinePluginFactory
 import io.getstream.chat.android.state.plugin.config.StatePluginConfig
 import io.getstream.chat.android.state.plugin.factory.StreamStatePluginFactory
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.Alignment
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-
 
 @Composable
 fun ChatListScreen(navController: NavController, vm: TCViewModel) {
     val context = LocalContext.current
 
+    // Khởi tạo plugin Stream
     val offlinePluginFactory = remember {
         StreamOfflinePluginFactory(appContext = context.applicationContext)
     }
@@ -37,52 +35,73 @@ fun ChatListScreen(navController: NavController, vm: TCViewModel) {
         StreamStatePluginFactory(config = StatePluginConfig(), appContext = context.applicationContext)
     }
 
+    // Tạo ChatClient duy nhất
     val client = remember {
-        ChatClient.Builder("ghhjw753ksej", context.applicationContext)
+        ChatClient.Builder("asw9g2a8pkzz", context.applicationContext)
             .withPlugins(offlinePluginFactory, statePluginFactory)
             .logLevel(ChatLogLevel.ALL)
             .build()
     }
 
     val userData = vm.userData.value
-    val userId = userData?.userId ?: "unknown_user"
-    val username = userData?.username ?: "Unknown"
-    val imageUrl = userData?.imageUrl ?: "https://bit.ly/2TIt8NR"
+    val firebaseUser = Firebase.auth.currentUser
 
+    LaunchedEffect(userData, firebaseUser) {
+        if (firebaseUser == null || userData?.userId == null) {
+            Log.e("ChatListScreen", "❌ Firebase user or userData is null.")
+            return@LaunchedEffect
+        }
 
+        Log.d("ChatListScreen", "🔄 Refreshing Firebase ID token before calling function...")
 
+        // Làm mới ID token Firebase để đảm bảo xác thực hợp lệ
+        firebaseUser.getIdToken(true)
+            .addOnSuccessListener {
+                Log.d("ChatListScreen", "✅ Firebase ID token refreshed successfully. Now calling Cloud Function...")
 
+                vm.getStreamToken { streamToken ->
+                    Log.d("ChatListScreen", "✅ Received Stream token from Cloud Function.")
 
-    LaunchedEffect(userId) {
-        val user = User(
-            id = userId,
-            name = username,
-            image = imageUrl
-        )
-        val token = client.devToken(user.id)
+                    val user = User(
+                        id = userData.userId!!,
+                        name = userData.name ?: userData.username ?: "Unknown",
+                        image = userData.imageUrl ?: ""
+                    )
 
-        client.connectUser(user, token).enqueue()
+                    client.connectUser(user, streamToken).enqueue { result ->
+                        if (result.isSuccess) {
+                            Log.d("ChatListScreen", "✅ Connected to Stream successfully.")
+                        } else {
+                            Log.e("ChatListScreen", "❌ Failed to connect to Stream: ${result.errorOrNull()?.message}")
+                        }
+                    }
+                }
+            }
+            .addOnFailureListener { e ->
+                Log.e("ChatListScreen", "❌ Failed to refresh Firebase token: ${e.message}")
+            }
     }
 
     val clientInitializationState by client.clientState.initializationState.collectAsState()
 
-    // ✅ Bọc toàn bộ trong Box
+    // UI
     Box(modifier = Modifier.fillMaxSize()) {
-
-        // Nội dung chính
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Top,
             modifier = Modifier
                 .fillMaxSize()
-                .padding(bottom = 56.dp) // để chừa chỗ cho bottom bar
+                .padding(bottom = 56.dp)
         ) {
             when (clientInitializationState) {
                 InitializationState.COMPLETE -> {
                     ChatTheme {
                         ChannelsScreen(
+                            title = "Chats",
                             onChannelClick = { channel ->
-                                // navController.navigate("chat/${channel.cid}")
+                                val singleChatRoute =
+                                    DestinationScreen.SingleChat.createRoute(channel.cid)
+                                navController.navigate(singleChatRoute)
                             },
                             onBackPressed = { navController.popBackStack() }
                         )
@@ -90,11 +109,11 @@ fun ChatListScreen(navController: NavController, vm: TCViewModel) {
                 }
 
                 InitializationState.INITIALIZING -> {
-                    Text(text = "Initializing...")
+                    Text(text = "Connecting to chat...")
                 }
 
                 InitializationState.NOT_INITIALIZED -> {
-                    Text(text = "Not initialized...")
+                    Text(text = "Waiting for authentication...")
                 }
             }
         }
@@ -111,4 +130,3 @@ fun ChatListScreen(navController: NavController, vm: TCViewModel) {
         }
     }
 }
-
