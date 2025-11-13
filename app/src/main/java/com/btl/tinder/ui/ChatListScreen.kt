@@ -1,15 +1,16 @@
 package com.btl.tinder.ui
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.btl.tinder.TCViewModel
 import io.getstream.chat.android.client.ChatClient
 import io.getstream.chat.android.client.logger.ChatLogLevel
 import io.getstream.chat.android.compose.ui.channels.ChannelsScreen
@@ -19,20 +20,23 @@ import io.getstream.chat.android.models.User
 import io.getstream.chat.android.offline.plugin.factory.StreamOfflinePluginFactory
 import io.getstream.chat.android.state.plugin.config.StatePluginConfig
 import io.getstream.chat.android.state.plugin.factory.StreamStatePluginFactory
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.Alignment
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+
 
 @Composable
-fun ChatListScreen(navController: NavController) {
+fun ChatListScreen(navController: NavController, vm: TCViewModel) {
     val context = LocalContext.current
 
-    // 1. Khởi tạo plugin offline & state (chỉ 1 lần)
     val offlinePluginFactory = remember {
         StreamOfflinePluginFactory(appContext = context.applicationContext)
     }
     val statePluginFactory = remember {
-        StreamStatePluginFactory(config = StatePluginConfig(), appContext = context)
+        StreamStatePluginFactory(config = StatePluginConfig(), appContext = context.applicationContext)
     }
 
-    // 2. Tạo client Stream Chat (chỉ 1 lần)
     val client = remember {
         ChatClient.Builder("ghhjw753ksej", context.applicationContext)
             .withPlugins(offlinePluginFactory, statePluginFactory)
@@ -40,40 +44,49 @@ fun ChatListScreen(navController: NavController) {
             .build()
     }
 
-    // 3. Kết nối user khi composable được load
-    LaunchedEffect(Unit) {
-        val user = User(
-            id = "namtest",
-            name = "namtest",
-            image = "https://bit.ly/2TIt8NR"
-        )
+    val userData = vm.userData.value
+    val userId = userData?.userId ?: "unknown_user"
+    val username = userData?.username ?: "Unknown"
+    val imageUrl = userData?.imageUrl ?: "https://bit.ly/2TIt8NR"
 
-        client.connectUser(
-            user = user,
-            token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoibmFtdGVzdCJ9.qxisoh2Kj08Q1GDdf3uICX34a66MbKjgB1V7e24VIZU"
-        ).enqueue()
+
+
+
+
+    LaunchedEffect(userId) {
+        val user = User(
+            id = userId,
+            name = username,
+            image = imageUrl
+        )
+        val token = client.devToken(user.id)
+
+        client.connectUser(user, token).enqueue()
     }
 
-    // 4. Theo dõi trạng thái khởi tạo client
     val clientInitializationState by client.clientState.initializationState.collectAsState()
 
-    // 5. Giao diện hiển thị
+    // ✅ Bọc toàn bộ trong Box
+    Box(modifier = Modifier.fillMaxSize()) {
+
+        // Nội dung chính
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.SpaceBetween,
-            modifier = Modifier.fillMaxSize()
+            verticalArrangement = Arrangement.Top,
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(bottom = 56.dp) // để chừa chỗ cho bottom bar
         ) {
             when (clientInitializationState) {
                 InitializationState.COMPLETE -> {
-                    ChannelsScreen(
-                        onChannelClick = { channel ->
-                            // TODO: điều hướng sang màn hình chat cụ thể
-                            // navController.navigate("chat/${channel.cid}")
-                        },
-                        onBackPressed = {
-                            navController.popBackStack()
-                        }
-                    )
+                    ChatTheme {
+                        ChannelsScreen(
+                            onChannelClick = { channel ->
+                                // navController.navigate("chat/${channel.cid}")
+                            },
+                            onBackPressed = { navController.popBackStack() }
+                        )
+                    }
                 }
 
                 InitializationState.INITIALIZING -> {
@@ -84,11 +97,18 @@ fun ChatListScreen(navController: NavController) {
                     Text(text = "Not initialized...")
                 }
             }
+        }
 
-            // Giữ nguyên thanh bottom navigation của bạn
+        Box(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth()
+        ) {
             BottomNavigationMenu(
                 selectedItem = BottomNavigationItem.CHATLIST,
                 navController = navController
             )
         }
+    }
 }
+
